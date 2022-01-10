@@ -2,6 +2,7 @@ package com.minio.utils;
 
 import com.minio.config.MinioProp;
 import com.minio.dto.response.FileUploadResponse;
+//import io.minio.*;
 import io.minio.*;
 import io.minio.errors.*;
 import io.minio.messages.Bucket;
@@ -65,7 +66,7 @@ public class MinioUtil {
                         .build());
         String url = minioProp.getEndpoint() + "/" + bucketName + "/" + fileName;
         String urlHost = minioProp.getFilHost() + "/" + bucketName + "/" + fileName;
-        log.info("上传文件成功url ：[{}], urlHost ：[{}]", url, urlHost);
+        log.info("上传文件成功url ：[{}], urlHost ：[{}]", url, url);
         return new FileUploadResponse(url, urlHost);
     }
 

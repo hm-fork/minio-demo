@@ -30,7 +30,8 @@ public class MinioController {
      * 上传文件
      */
     @PostMapping("/upload")
-    public FileUploadResponse upload(@RequestParam(name = "file", required = false) MultipartFile file, @RequestParam(required = false, defaultValue = "salt") String bucketName) {
+    public FileUploadResponse upload(@RequestParam MultipartFile file,          // 接收 formdata数据并解析字段
+                                     @RequestParam(required = false, defaultValue = "salt") String bucketName) {
         FileUploadResponse response = null;
         try {
             response = minioUtil.uploadFile(file, bucketName);
