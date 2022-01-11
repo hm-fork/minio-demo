@@ -11,15 +11,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
+import java.util.*;
 
 @Slf4j
 @Component
@@ -60,14 +60,51 @@ public class MinioUtil {
                 originalFilename.substring(originalFilename.lastIndexOf("."));
         //开始上传
         client.putObject(
-                PutObjectArgs.builder().bucket(bucketName).object(fileName).stream(
-                        file.getInputStream(), file.getSize(), -1)
+                PutObjectArgs.builder().bucket(bucketName)
+                        .object(originalFilename)
+                        .stream(file.getInputStream(), file.getSize(), -1)
                         .contentType(file.getContentType())
                         .build());
         String url = minioProp.getEndpoint() + "/" + bucketName + "/" + fileName;
         String urlHost = minioProp.getFilHost() + "/" + bucketName + "/" + fileName;
         log.info("上传文件成功url ：[{}], urlHost ：[{}]", url, url);
         return new FileUploadResponse(url, urlHost);
+    }
+
+    public void composeFile(String bucketName) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
+        //文件名
+        List<ComposeSource> sourceObjectList = new ArrayList<>();
+        sourceObjectList.add(ComposeSource.builder().bucket(bucketName)
+                .object("111.mp4")
+                .build());
+        sourceObjectList.add(ComposeSource.builder().bucket(bucketName)
+                .object("222.mp4")
+                .build());
+        try {
+            ObjectWriteResponse res = client.composeObject(ComposeObjectArgs.builder()
+                    .bucket(bucketName)
+                    .object("333.mp4")
+                    .sources(sourceObjectList)
+                    .build());
+            System.out.println("" + res);
+        }catch (Exception e) {
+            System.out.println("" + e);
+        }
+
+
+
+    }
+
+    public void writeFile(String content, String fileName, String bucketName) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
+        ByteArrayInputStream inputStream = new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8));
+        int length = inputStream.available();
+        ObjectWriteResponse res = client.putObject(PutObjectArgs.builder().bucket(bucketName)
+                .object(fileName)
+                .stream(inputStream, length, -1)
+//                .contentType("application/json")
+                .build());
+
+        System.out.println("" + res);
     }
 
     /**

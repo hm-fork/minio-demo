@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="person">
+    <select id="selectAll" resultType="com.example.demo.entity.Person">select * from t_person</select>
+
+    <!-- 查询带参（id）   -->
+    <select id="selectPersonByParams" parameterType="com.example.demo.entity.Person" resultType="com.example.demo.entity.Person">
+        select * from t_person where id=#{id} OR name=#{name}
+    </select>
+
+    <!--    -->
+    <select id="selectListByAgeRange" parameterType="java.util.Map" resultType="com.example.demo.entity.Person">
+        select * from t_person
+        where
+        age between #{min} and #{max}
+        order by age
+        limit 0, #{limit}
+    </select>
+
+    <select id="selectLinked" resultType="java.util.LinkedHashMap">
+        select p.*, g.group_name, '1' as test from t_person p, t_group g
+        where p.group_id = g.group_id
+    </select>
+
+    <resultMap id="personGroup" type="com.example.demo.dto.PersonGroupDTO">
+        <id property="person.id" column="id" />
+        <result property="person.name" column="name" />
+        <result property="person.age" column="age" />
+        <result property="person.groupId" column="group_id" />
+        <result property="groupName" column="group_name" />
+        <result property="test" column="test" />
+    </resultMap>
+    <select id="selectPersonGroupDTO" resultMap="personGroup">
+        select p.*, g.group_name, '1' as test from t_person p, t_group g
+        where p.group_id = g.group_id
+    </select>
+
+    <insert id="insertPerson" parameterType="com.example.demo.entity.Person">
+        INSERT INTO t_person(name, age)
+        VALUES  (#{name},#{age})
+        -- 插入完成后往person对象中回填相关自动注入的数据(如自增主键)
+        <selectKey resultType="Integer" keyProperty="id" order="AFTER">
+            select last_insert_id()
+        </selectKey>
+    </insert>
+
+    <update id="updatePersonByName" parameterType="com.example.demo.entity.Person">
+        UPDATE t_person
+        SET
+        name=#{name},
+        age=#{age},
+        group_id=#{groupId}
+        WHERE
+        name=#{name}
+    </update>
+
+    <delete id="deletePerson" parameterType="String">
+        delete from t_person
+        where name = #{value}
+    </delete>
+
+    <select id="dynamicQuery" parameterType="com.example.demo.entity.Person" resultType="com.example.demo.entity.Person">
+        select * from t_person
+        <where>
+            <if test="id != null">
+                and id = #{id}
+            </if>
+            <if test="age != null">
+                and age = #{age}
+            </if>
+            <if test="name != null">
+                and name = #{name}
+            </if>
+            <if test="groupId != null">
+                and group_id = #{groupId}
+            </if>
+        </where>
+    </select>
+
+    <insert id="batchInsert" parameterType="java.util.List">
+        INSERT INTO t_person (name, age)
+        VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (#{item.name}, #{item.age})
+        </foreach>
+    </insert>
+
+    <delete id="batchDeleteByRegExp" parameterType="java.util.List">
+        delete from t_person
+        WHERE
+        <foreach collection="list" item="item" index="index">
+            ${item.matchKey} REGEXP #{item.matchExp}
+            <if test="index&lt;(list.size()-1)">
+                and
+            </if>
+        </foreach>
+    </delete>
+
+    <select id="testBatchQueryByRegExp" parameterType="java.util.List" resultType="com.example.demo.entity.Person">
+        select * from t_person
+        WHERE
+        <foreach collection="list" item="item" index="index">
+            ${item.matchKey} REGEXP #{item.matchExp}
+            <if test="index&lt;(list.size()-1)">
+                and
+            </if>
+        </foreach>
+    </select>
+</mapper>
